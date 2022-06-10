@@ -17,6 +17,9 @@ jobs:
       - name: List available xcode versions
         run: |
           ls /Applications | grep Xcode
+      - name: Select xcode version
+        run: |
+          sudo xcode-select -switch /Applications/Xcode_13.2.app && /usr/bin/xcodebuild -version
       - name: Set Default Scheme
         run: |
           scheme_list=$(xcodebuild -list -json | tr -d "\n")
