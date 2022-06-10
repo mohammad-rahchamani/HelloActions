@@ -14,25 +14,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: List available xcode versions
+      # - name: List available xcode versions
+      #   run: |
+      #     ls /Applications | grep Xcode
+      # - name: Select xcode version
+      #   run: |
+      #     sudo xcode-select -switch /Applications/Xcode_13.2.app && /usr/bin/xcodebuild -version
+      # - name: Install simulator 14.5
+      #   run: |
+      #     xcversion simulators --install='iOS 14.5'
+      # - name: Prepare simulator
+      #   run: |
+      #     sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
+      #     sudo ln -s /Applications/Xcode_13.2.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 14.5.simruntime
+      #     xcrun simctl list runtimes
+      #     xcrun simctl create iPhone_12 "iPhone 12" "com.apple.CoreSimulator.SimRuntime.iOS-14-5"
+      #     xcrun simctl list devices 14.5
+      - name: Print xcodebuild version
         run: |
-          ls /Applications | grep Xcode
-      - name: Select xcode version
-        run: |
-          sudo xcode-select -switch /Applications/Xcode_13.2.app && /usr/bin/xcodebuild -version
-      - name: Install simulator 14.5
-        run: |
-          xcversion simulators --install='iOS 14.5'
-      - name: Prepare simulator
-        run: |
-          sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
-          sudo ln -s /Applications/Xcode_13.2.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 14.5.simruntime
-          xcrun simctl list runtimes
-          xcrun simctl create iPhone_12 "iPhone 12" "com.apple.CoreSimulator.SimRuntime.iOS-14-5"
-          xcrun simctl list devices 14.5
+          /usr/bin/xcodebuild -version
       - name: Set Default Scheme
         run: |
+          # scheme_list will contain the json output of project targets, configs, schemes, ... without new line character
           scheme_list=$(xcodebuild -list -json | tr -d "\n")
+          # get the first target of the project
           default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
           echo $default | cat >default
           echo Using default scheme: $default
@@ -47,7 +52,7 @@ jobs:
           if [ $scheme = default ]; then scheme=$(cat default); fi
           if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
           file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild build-for-testing -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=iOS Simulator,OS=14.5,name=iPhone 12"
+          xcodebuild build-for-testing -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=iOS Simulator,OS=15.2,name=iPhone 13"
       - name: Test
         env:
           scheme: ${{ 'default' }}
@@ -58,5 +63,6 @@ jobs:
           if [ $scheme = default ]; then scheme=$(cat default); fi
           if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
           file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild test-without-building -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
+          # xcodebuild test-without-building -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
+          xcodebuild test-without-building -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=iOS Simulator,OS=15.2,name=iPhone 13"
 
